@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getStaffProfileOrRedirect } from "@/lib/get-staff";
 import { createClient } from "@/lib/supabase/server";
+import { advancePayoutStatus } from "@/lib/acl-admin-actions";
 
 const STATUSES = ["pending", "invoiced", "received", "paid_out"] as const;
 type PayoutStatus = (typeof STATUSES)[number];
@@ -153,6 +154,25 @@ export default async function PayoutsPage() {
                   </Td>
                   <Td>
                     <StatusPill status={r.status} />
+                    {profile.role === "acl_admin" && r.status !== "paid_out" && (
+                      <form
+                        action={async () => {
+                          "use server";
+                          const next: Record<PayoutStatus, PayoutStatus> = {
+                            pending: "invoiced",
+                            invoiced: "received",
+                            received: "paid_out",
+                            paid_out: "paid_out",
+                          };
+                          await advancePayoutStatus(r.id, next[r.status]);
+                        }}
+                        className="mt-1"
+                      >
+                        <button className="text-[11px] text-acl-blue hover:underline">
+                          → {STATUS_LABEL[advanceMap[r.status]]}
+                        </button>
+                      </form>
+                    )}
                   </Td>
                 </tr>
               ))}
@@ -161,15 +181,17 @@ export default async function PayoutsPage() {
         </div>
       )}
 
-      {profile.role !== "acl_admin" && (
-        <p className="text-[11px] text-zinc-500">
-          Payout-status transitions (Pending → Invoiced → Received → Paid out) are
-          ACL admin actions. They'll appear here in the next build.
-        </p>
-      )}
     </div>
   );
 }
+
+// Next status in the lifecycle. Terminal at paid_out.
+const advanceMap: Record<PayoutStatus, PayoutStatus> = {
+  pending: "invoiced",
+  invoiced: "received",
+  received: "paid_out",
+  paid_out: "paid_out",
+};
 
 function Th({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (

@@ -52,6 +52,16 @@ export default async function StaffLayout({
           <nav className="flex-1 px-3 py-4 space-y-0.5">
             <NavLink href="/teams" label="Teams" />
             <NavLink href="/payouts" label="Payouts" />
+            {profile.role === "acl_admin" && (
+              <>
+                <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800" />
+                <p className="px-3 py-1 text-[10px] uppercase tracking-wide text-zinc-400">
+                  ACL Admin
+                </p>
+                <NavLink href="/review" label="Review queue" />
+                <NavLink href="/orgs" label="Universities" />
+              </>
+            )}
           </nav>
           <div className="px-3 pb-4">
             <SignOutButton />
