@@ -98,6 +98,16 @@ export interface Athlete {
   last_seen_vault_at: string;
   created_at: string;
   updated_at: string;
+  // University tenancy (Phase 1+). Null until bound via team_assignments.
+  org_id: string | null;
+  team_id: string | null;
+}
+
+// Resolved team/org context for the current athlete (Phase 2).
+// Used by the authed layout to surface "Team X · University Y" in the shell.
+export interface AthleteTeamContext {
+  team: { id: string; name: string; sport: string | null } | null;
+  org: { id: string; name: string } | null;
 }
 
 export interface Pod {

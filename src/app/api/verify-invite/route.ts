@@ -1,5 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Public endpoint (no auth required) — verifies an invite code during signup.
+// Uses the service-role key because the anon RLS on invite_codes only allows
+// SELECT of unclaimed/unexpired rows; the service-role bypass lets us return
+// the team/org context attached to the code so the signup UI can show
+// "Joining Team X at University Y".
+//
+// We deliberately return only the minimum (valid + team/org names) so a
+// scraper of this endpoint can't enumerate code metadata beyond what the
+// user holding the code would already see.
 export async function POST(request: Request) {
   try {
     const { code } = await request.json();
@@ -14,7 +23,7 @@ export async function POST(request: Request) {
     if (!supabaseUrl || !serviceRoleKey) {
       console.error("Missing SUPABASE env vars:", {
         hasUrl: !!supabaseUrl,
-        hasKey: !!serviceRoleKey
+        hasKey: !!serviceRoleKey,
       });
       return Response.json({ valid: false, error: "Server configuration error" });
     }
@@ -25,7 +34,14 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("invite_codes")
-      .select("id, expires_at")
+      .select(
+        `
+        id,
+        expires_at,
+        team_id,
+        teams ( id, name, sport, organizations ( id, name ) )
+      `,
+      )
       .eq("code", code.trim().toUpperCase())
       .is("used_by", null)
       .maybeSingle();
@@ -37,7 +53,33 @@ export async function POST(request: Request) {
       return Response.json({ valid: false });
     }
 
-    return Response.json({ valid: !!data && !isExpired });
+    if (!data || isExpired) {
+      return Response.json({ valid: false });
+    }
+
+    // Flatten team/org names if present. Supabase joins return nested objects
+    // or null when the FK is null.
+    type JoinedTeam = {
+      id: string;
+      name: string;
+      sport: string | null;
+      organizations: { id: string; name: string } | null;
+    } | null;
+    const team = data.teams as JoinedTeam;
+
+    return Response.json({
+      valid: true,
+      team: team
+        ? {
+            id: team.id,
+            name: team.name,
+            sport: team.sport,
+            org: team.organizations
+              ? { id: team.organizations.id, name: team.organizations.name }
+              : null,
+          }
+        : null,
+    });
   } catch (err) {
     console.error("Verify invite error:", err);
     return Response.json({ valid: false });

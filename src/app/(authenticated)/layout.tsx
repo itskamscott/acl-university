@@ -7,7 +7,7 @@ import { InstallPrompt } from "@/components/install-prompt";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { WinCelebrationProvider } from "@/components/win-celebration";
 import { ProfileCompletionBanner } from "@/components/profile-completion-banner";
-import { getAthleteOrRedirect } from "@/lib/get-athlete";
+import { getAthleteOrRedirect, getAthleteTeamContext } from "@/lib/get-athlete";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AuthenticatedLayout({
@@ -16,6 +16,7 @@ export default async function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const { athlete } = await getAthleteOrRedirect();
+  const teamContext = await getAthleteTeamContext();
   const supabase = await createClient();
 
   // Brand-Vault-gating fields. Order matters — we render them in the
@@ -43,6 +44,7 @@ export default async function AuthenticatedLayout({
           isAdmin={athlete.is_admin}
           tier={athlete.tier}
           newVaultCount={newVaultCount}
+          teamContext={teamContext}
         >
           <ScrollToTop />
           <ProfileCompletionBanner missing={missingProfileFields} />

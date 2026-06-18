@@ -39,11 +39,19 @@ function StepIndicator({ step }: { step: Step }) {
   );
 }
 
+type InviteTeam = {
+  id: string;
+  name: string;
+  sport: string | null;
+  org: { id: string; name: string } | null;
+} | null;
+
 function SignupForm() {
   const searchParams = useSearchParams();
   const prefilledCode = searchParams.get("code")?.toUpperCase() ?? "";
   const [step, setStep] = useState<Step>("invite");
   const [inviteCode, setInviteCode] = useState(prefilledCode);
+  const [inviteTeam, setInviteTeam] = useState<InviteTeam>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -71,12 +79,21 @@ function SignupForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: inviteCode }),
     });
-    const { valid } = await res.json();
+    const { valid, team } = await res.json();
 
     if (!valid) {
       setError("That code didn't check out. Double-check the email you got.");
       setLoading(false);
       return;
+    }
+
+    // Team-linked invites pre-bind the athlete to a team via DB trigger
+    // (migration 024) when the code is claimed. Surface the context here
+    // and pre-fill the school field with the org name.
+    if (team) {
+      setInviteTeam(team as InviteTeam);
+      if (team.org?.name) setSchool(team.org.name);
+      if (team.sport) setSport(team.sport);
     }
 
     setLoading(false);
@@ -215,6 +232,16 @@ function SignupForm() {
         </div>
 
         {step !== "invite" && <StepIndicator step={step} />}
+
+        {step !== "invite" && inviteTeam && (
+          <div className="mb-4 rounded-lg border border-acl-blue/30 bg-acl-blue/5 p-3 text-xs text-zinc-700 dark:text-zinc-200">
+            Joining <span className="font-semibold">{inviteTeam.name}</span>
+            {inviteTeam.org?.name ? (
+              <> at <span className="font-semibold">{inviteTeam.org.name}</span></>
+            ) : null}
+            .
+          </div>
+        )}
 
         {step === "invite" && (
           <form onSubmit={handleVerifyCode} className="space-y-4">

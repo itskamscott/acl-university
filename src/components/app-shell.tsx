@@ -7,7 +7,7 @@ import { LayoutDashboard, Building2, MessageCircle, Settings, Shield, ExternalLi
 import { useCredits } from "@/components/credits-provider";
 import { FeedbackButton } from "@/components/feedback-button";
 import { SKOOL_COMMUNITY_URL } from "@/lib/links";
-import type { AthleteTier } from "@/lib/types";
+import type { AthleteTier, AthleteTeamContext } from "@/lib/types";
 
 const baseNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -35,11 +35,13 @@ export function AppShell({
   isAdmin = false,
   tier,
   newVaultCount = 0,
+  teamContext,
 }: {
   children: React.ReactNode;
   isAdmin?: boolean;
   tier?: AthleteTier;
   newVaultCount?: number;
+  teamContext?: AthleteTeamContext;
 }) {
   const pathname = usePathname();
   const inProgram = tier === "insider" || tier === "lab_partner";
@@ -62,9 +64,17 @@ export function AppShell({
     <div className="flex min-h-screen w-full max-w-full overflow-x-clip bg-zinc-50 dark:bg-zinc-950">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-0 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-        <div className="flex items-center gap-2.5 px-5 py-5 border-b border-zinc-100 dark:border-zinc-800">
-          <Image src="/logo.png" alt="ACL+" width={28} height={28} />
-          <span className="text-base font-bold tracking-tight text-acl-black dark:text-zinc-100">ACL+</span>
+        <div className="px-5 py-5 border-b border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="ACL+" width={28} height={28} />
+            <span className="text-base font-bold tracking-tight text-acl-black dark:text-zinc-100">ACL+</span>
+          </div>
+          {teamContext?.team && (
+            <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+              {teamContext.team.name}
+              {teamContext.org?.name ? ` · ${teamContext.org.name}` : ""}
+            </p>
+          )}
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           {navItems.map((item) => {
