@@ -53,8 +53,12 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
+    // /post-login picks /dashboard for athletes and /teams for staff based
+    // on profiles.role, avoiding a redirect loop when a non-athlete lands
+    // on /dashboard and the (authenticated) layout bounces them back to
+    // /login.
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/post-login";
     return NextResponse.redirect(url);
   }
 
