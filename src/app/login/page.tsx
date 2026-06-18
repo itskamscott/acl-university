@@ -28,7 +28,9 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = "/dashboard";
+    // /post-login picks /dashboard for athletes and /teams for staff
+    // based on profiles.role.
+    window.location.href = "/post-login";
   }
 
   return (
