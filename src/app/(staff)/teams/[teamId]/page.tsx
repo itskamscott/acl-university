@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStaffProfileOrRedirect } from "@/lib/get-staff";
 import { createClient } from "@/lib/supabase/server";
+import { ContentIdeasSection } from "./content-ideas-section";
 
 // Mirrors the spec's deal_status walk (migration 022 acl_deal_status enum).
 const DEAL_STAGES = [
@@ -292,6 +293,9 @@ export default async function TeamDashboard({ params }: PageProps) {
           </div>
         )}
       </section>
+
+      {/* Team-level content ideas (Phase 6) */}
+      <ContentIdeasSection teamId={teamId} />
 
       {/* Staff on this team */}
       <section>
