@@ -77,6 +77,7 @@ export async function advanceContractAclStatus(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/contracts/${contractId}`);
+  revalidatePath(`/deals/${contractId}`);
   revalidatePath("/payouts");
   if (contract.team_id) revalidatePath(`/teams/${contract.team_id}`);
 
@@ -106,6 +107,7 @@ export async function setContractAclPercentage(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/contracts/${contractId}`);
+  revalidatePath(`/deals/${contractId}`);
   return { ok: true };
 }
 
@@ -124,5 +126,6 @@ export async function setContractGrossAmount(
     .eq("id", contractId);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/contracts/${contractId}`);
+  revalidatePath(`/deals/${contractId}`);
   return { ok: true };
 }

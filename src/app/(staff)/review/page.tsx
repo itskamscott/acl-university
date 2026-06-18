@@ -67,7 +67,7 @@ export default async function ReviewQueuePage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
-                      href={`/contracts/${c.id}`}
+                      href={`/deals/${c.id}`}
                       className="text-base font-semibold text-acl-blue hover:underline"
                     >
                       {c.title ?? "(untitled)"}

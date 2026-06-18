@@ -124,7 +124,7 @@ export default async function PayoutsPage() {
                   <Td>
                     {r.contracts ? (
                       <Link
-                        href={`/contracts/${r.contracts.id}`}
+                        href={`/deals/${r.contracts.id}`}
                         className="text-acl-blue hover:underline"
                       >
                         {r.contracts.title ?? "(untitled)"}
