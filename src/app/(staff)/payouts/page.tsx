@@ -45,7 +45,7 @@ export default async function PayoutsPage() {
     teams: { id: string; name: string } | null;
     organizations: { id: string; name: string } | null;
   };
-  const rows = (payouts ?? []) as Joined[];
+  const rows = (payouts ?? []) as unknown as Joined[];
 
   // Stats strip
   const totals = STATUSES.reduce(

@@ -36,7 +36,7 @@ export default async function ReviewQueuePage() {
     brand_agreement_url: string | null;
     athlete_agreement_url: string | null;
   };
-  const rows = (contracts ?? []) as Joined[];
+  const rows = (contracts ?? []) as unknown as Joined[];
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

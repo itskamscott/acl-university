@@ -56,7 +56,7 @@ export const getAthleteTeamContext = cache(
     type JoinedOrg = { id: string; name: string } | null;
     return {
       team: { id: team.id, name: team.name, sport: team.sport },
-      org: (team.organizations as JoinedOrg) ?? null,
+      org: (team.organizations as unknown as JoinedOrg) ?? null,
     };
   },
 );

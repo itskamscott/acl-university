@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       sport: string | null;
       organizations: { id: string; name: string } | null;
     } | null;
-    const team = data.teams as JoinedTeam;
+    const team = data.teams as unknown as JoinedTeam;
 
     return Response.json({
       valid: true,

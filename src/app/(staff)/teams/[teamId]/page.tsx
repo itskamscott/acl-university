@@ -84,7 +84,7 @@ export default async function TeamDashboard({ params }: PageProps) {
   const athletes = athletesResult.data ?? [];
   const contracts = contractsResult.data ?? [];
   const posts = contentResult.data ?? [];
-  const managers = (managersResult.data ?? []) as Array<{
+  const managers = (managersResult.data ?? []) as unknown as Array<{
     profile_id: string;
     profiles: { id: string; full_name: string | null } | null;
   }>;
@@ -139,7 +139,7 @@ export default async function TeamDashboard({ params }: PageProps) {
   }
 
   type RawOrg = { id: string; name: string } | null;
-  const org = (team.organizations as RawOrg) ?? null;
+  const org = (team.organizations as unknown as RawOrg) ?? null;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
