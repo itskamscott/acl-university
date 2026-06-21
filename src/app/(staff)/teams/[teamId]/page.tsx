@@ -63,8 +63,9 @@ export default async function TeamDashboard({ params }: PageProps) {
         .order("full_name", { ascending: true }),
       supabase
         .from("contracts")
-        .select("id, athlete_id, acl_status, gross_amount, total_value_cents")
-        .eq("team_id", teamId),
+        .select("id, athlete_id, title, brand_name, acl_status, gross_amount, total_value_cents, created_at")
+        .eq("team_id", teamId)
+        .order("created_at", { ascending: false }),
       supabase
         .from("content_posts")
         .select("id, athlete_id, status, platform, title, posted_at, planned_for, posted_url")
@@ -293,6 +294,51 @@ export default async function TeamDashboard({ params }: PageProps) {
           </div>
         )}
       </section>
+
+      {/* Deals list — each row links to the staff deal detail page */}
+      {contracts.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide">
+            Deals ({contracts.length})
+          </h2>
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800">
+            {contracts.map((c) => {
+              const athleteName = athletes.find((a) => a.id === c.athlete_id)?.full_name ?? "—";
+              const stage = (c.acl_status ?? "proposed") as DealStage;
+              const gross =
+                typeof c.gross_amount === "number"
+                  ? c.gross_amount
+                  : typeof c.total_value_cents === "number"
+                    ? c.total_value_cents / 100
+                    : null;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/deals/${c.id}`}
+                  className="px-4 py-3 flex items-center justify-between gap-3 text-sm hover:bg-acl-orange/5"
+                >
+                  <div className="min-w-0">
+                    <p className="font-semibold text-acl-black dark:text-zinc-100 truncate">
+                      {c.title ?? "(untitled)"}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 truncate">
+                      {c.brand_name ?? "—"} · {athleteName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 text-[11px]">
+                    {gross !== null && (
+                      <span className="text-zinc-500 tabular-nums">{fmtMoney(gross)}</span>
+                    )}
+                    <span className="rounded-full bg-acl-blue/10 text-acl-blue px-2 py-0.5">
+                      {DEAL_STAGE_LABEL[stage]}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Team-level content ideas (Phase 6) */}
       <ContentIdeasSection teamId={teamId} />

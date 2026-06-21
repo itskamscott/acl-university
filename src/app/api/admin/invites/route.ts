@@ -23,8 +23,11 @@ function generateInviteCode(): string {
 //   team_id?      uuid   — bind the code to a team; null means unscoped
 //   invited_email? string — optional, for sending the invite email
 //   expires_at?   ISO ts — optional expiry
+//   target_role?  'athlete' | 'team_manager' — defaults to 'athlete'.
+//                 'team_manager' codes promote the signing-up user to coach
+//                 and bind them to the team as a manager (migration 029).
 //
-// Returns: { code, team_id, invited_email, expires_at }
+// Returns: { code, team_id, invited_email, expires_at, target_role }
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -47,7 +50,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  let body: { team_id?: string | null; invited_email?: string; expires_at?: string };
+  let body: {
+    team_id?: string | null;
+    invited_email?: string;
+    expires_at?: string;
+    target_role?: "athlete" | "team_manager";
+  };
   try {
     body = await request.json();
   } catch {
@@ -63,6 +71,13 @@ export async function POST(request: Request) {
     typeof body.expires_at === "string" && !Number.isNaN(Date.parse(body.expires_at))
       ? new Date(body.expires_at).toISOString()
       : null;
+  const targetRole = body.target_role === "team_manager" ? "team_manager" : "athlete";
+  if (targetRole === "team_manager" && !teamId) {
+    return NextResponse.json(
+      { error: "team_manager invites require a team_id." },
+      { status: 400 },
+    );
+  }
 
   // Retry on the slim chance of a UNIQUE collision on `code`.
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -74,8 +89,9 @@ export async function POST(request: Request) {
         team_id: teamId,
         invited_email: invitedEmail,
         expires_at: expiresAt,
+        target_role: targetRole,
       })
-      .select("id, code, team_id, invited_email, expires_at")
+      .select("id, code, team_id, invited_email, expires_at, target_role")
       .single();
 
     if (!error && data) {

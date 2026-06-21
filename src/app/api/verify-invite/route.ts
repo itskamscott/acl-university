@@ -39,6 +39,7 @@ export async function POST(request: Request) {
         id,
         expires_at,
         team_id,
+        target_role,
         teams ( id, name, sport, organizations ( id, name ) )
       `,
       )
@@ -69,6 +70,7 @@ export async function POST(request: Request) {
 
     return Response.json({
       valid: true,
+      target_role: data.target_role ?? "athlete",
       team: team
         ? {
             id: team.id,

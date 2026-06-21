@@ -46,12 +46,15 @@ type InviteTeam = {
   org: { id: string; name: string } | null;
 } | null;
 
+type TargetRole = "athlete" | "team_manager";
+
 function SignupForm() {
   const searchParams = useSearchParams();
   const prefilledCode = searchParams.get("code")?.toUpperCase() ?? "";
   const [step, setStep] = useState<Step>("invite");
   const [inviteCode, setInviteCode] = useState(prefilledCode);
   const [inviteTeam, setInviteTeam] = useState<InviteTeam>(null);
+  const [inviteTargetRole, setInviteTargetRole] = useState<TargetRole>("athlete");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,7 +82,7 @@ function SignupForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: inviteCode }),
     });
-    const { valid, team } = await res.json();
+    const { valid, team, target_role } = await res.json();
 
     if (!valid) {
       setError("That code didn't check out. Double-check the email you got.");
@@ -95,10 +98,13 @@ function SignupForm() {
       if (team.org?.name) setSchool(team.org.name);
       if (team.sport) setSport(team.sport);
     }
+    if (target_role === "team_manager") setInviteTargetRole("team_manager");
 
     setLoading(false);
     setStep("account");
   }
+
+  const isStaffSignup = inviteTargetRole === "team_manager";
 
   async function handleAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -157,7 +163,14 @@ function SignupForm() {
     void sendWelcomeEmail(email, fullName);
 
     setLoading(false);
-    setStep("athletic");
+    // Staff codes skip athletic + Brand Vault — those are athlete-only
+    // questions. They jump to the welcome screen and from there to
+    // /post-login which routes them to /teams.
+    if (isStaffSignup) {
+      setStep("welcome");
+    } else {
+      setStep("athletic");
+    }
   }
 
   async function handleAthletic(e: React.FormEvent) {
@@ -235,10 +248,12 @@ function SignupForm() {
 
         {step !== "invite" && inviteTeam && (
           <div className="mb-4 rounded-lg border border-acl-blue/30 bg-acl-blue/5 p-3 text-xs text-zinc-700 dark:text-zinc-200">
-            Joining <span className="font-semibold">{inviteTeam.name}</span>
+            Joining{" "}
+            <span className="font-semibold">{inviteTeam.name}</span>
             {inviteTeam.org?.name ? (
               <> at <span className="font-semibold">{inviteTeam.org.name}</span></>
             ) : null}
+            {isStaffSignup ? <> as a <span className="font-semibold">Coach</span></> : null}
             .
           </div>
         )}
@@ -448,11 +463,14 @@ function SignupForm() {
             />
             <button
               onClick={() => {
-                window.location.href = "/dashboard";
+                // /post-login routes athletes to /dashboard and staff to /teams
+                // based on their profiles.role (set by the bind trigger for
+                // staff codes).
+                window.location.href = "/post-login";
               }}
               className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-acl-orange py-2.5 text-sm font-semibold text-white hover:bg-acl-orange/90"
             >
-              Go to dashboard
+              {isStaffSignup ? "Go to your team" : "Go to dashboard"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
